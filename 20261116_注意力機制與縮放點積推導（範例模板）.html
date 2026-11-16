@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Wiki 簡報預覽 - 京都抹茶與和紙手帳風</title>
+  <!-- Google Fonts: 日系圓體與繁體中文無襯線體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <!-- KaTeX for LaTeX Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
+  <style>
+    :root {
+      --bg-washi: #F9F6F0;
+      --card-cream: #FFFFFF;
+      --border-linen: #E6DFD3;
+      --matcha-main: #8FA893;
+      --matcha-soft: #F0F4F1;
+      --terracotta-accent: #D99B84;
+      --terracotta-soft: #FBF2EE;
+      --text-coffee: #4A443F;
+      --text-muted: #7A726B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-washi);
+      /* 細微和紙點狀肌理 */
+      background-image: radial-gradient(#DED7C8 0.75px, transparent 0.75px);
+      background-size: 20px 20px;
+      color: var(--text-coffee);
+      font-family: 'Noto Sans TC', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .slide-container {
+      width: 90%;
+      max-width: 960px;
+      height: 80vh;
+      max-height: 620px;
+      position: relative;
+    }
+
+    .slide {
+      display: none;
+      background: var(--card-cream);
+      border: 1.5px solid var(--border-linen);
+      border-radius: 24px;
+      padding: 48px 56px;
+      height: 100%;
+      box-shadow: 0 12px 32px rgba(74, 68, 63, 0.06);
+      position: relative;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeSlide 0.4s ease-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 日系紙膠帶裝飾 */
+    .washi-tape {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-1.5deg);
+      width: 140px;
+      height: 28px;
+      background-color: rgba(143, 168, 147, 0.45);
+      border-left: 2px dashed rgba(255,255,255,0.6);
+      border-right: 2px dashed rgba(255,255,255,0.6);
+      backdrop-filter: blur(2px);
+    }
+
+    .washi-tape.pink {
+      background-color: rgba(217, 155, 132, 0.45);
+      transform: translateX(-50%) rotate(1.2deg);
+    }
+
+    /* 標題區 */
+    .slide-header {
+      border-bottom: 2px dashed var(--border-linen);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+
+    .tag-pill {
+      display: inline-block;
+      background: var(--terracotta-soft);
+      color: #B5735B;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(217, 155, 132, 0.3);
+    }
+
+    h1, h2 {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--text-coffee);
+      letter-spacing: 0.03em;
+    }
+
+    h1 { font-size: 2.2rem; line-height: 1.35; }
+    h2 { font-size: 1.65rem; display: flex; align-items: center; gap: 10px; }
+    h2::before {
+      content: "🌿";
+      font-size: 1.3rem;
+    }
+
+    /* 內文列表 */
+    .content-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      font-size: 1.1rem;
+      line-height: 1.75;
+    }
+
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    li {
+      position: relative;
+      padding-left: 26px;
+    }
+
+    li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 10px;
+      height: 10px;
+      background-color: var(--matcha-main);
+      border-radius: 50%;
+    }
+
+    .highlight {
+      background: linear-gradient(transparent 60%, rgba(217, 155, 132, 0.35) 60%);
+      font-weight: 700;
+      padding: 0 4px;
+    }
+
+    /* 抹茶便利貼 LaTeX 公式框 */
+    .formula-card {
+      background-color: var(--matcha-soft);
+      border: 1.5px solid rgba(143, 168, 147, 0.4);
+      border-radius: 16px;
+      padding: 20px 28px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .formula-card:hover {
+      border-color: var(--matcha-main);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(143, 168, 147, 0.15);
+    }
+
+    .copy-badge {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 0.75rem;
+      color: #5F7A63;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 2px 10px;
+      border-radius: 99px;
+      border: 1px solid rgba(143, 168, 147, 0.3);
+    }
+
+    /* 頁尾與 Wiki 引用標籤 */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-linen);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .wiki-source {
+      background: var(--bg-washi);
+      border: 1px solid var(--border-linen);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: #6B635B;
+    }
+
+    /* 導航控制列 */
+    .nav-controls {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--text-muted);
+    }
+
+    button.nav-btn {
+      background: var(--card-cream);
+      border: 1.5px solid var(--border-linen);
+      color: var(--text-coffee);
+      padding: 8px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    button.nav-btn:hover {
+      background: var(--matcha-soft);
+      border-color: var(--matcha-main);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-container">
+    <!-- 第 1 頁：封面 -->
+    <div class="slide active">
+      <div class="washi-tape"></div>
+      <div class="slide-header" style="border:none; text-align:center; margin-top: 40px;">
+        <span class="tag-pill">📒 LLM Wiki 知識庫研究簡報</span>
+        <h1>注意力機制與縮放點積推導<br><span style="font-size: 1.25rem; color: var(--text-muted); font-weight: 500;">基於本地 Wiki 知識庫之嚴格彙整筆記</span></h1>
+      </div>
+      <div class="content-body" style="align-items: center; text-align: center;">
+        <p style="max-width: 600px; color: var(--text-muted);">
+          本簡報所有核心推導皆嚴格引用自既有 Wiki 條目，並支援 LaTeX 公式即時渲染與一鍵複製功能。
+        </p>
+      </div>
+      <div class="slide-footer">
+        <span class="wiki-source">📎 來源：[[Wiki_Transformer架構基礎]]</span>
+        <span>使用鍵盤 ← / → 切換頁面</span>
+      </div>
+    </div>
+
+    <!-- 第 2 頁：內容與 LaTeX 公式展示 -->
+    <div class="slide">
+      <div class="washi-tape pink"></div>
+      <div class="slide-header">
+        <span class="tag-pill">01 / 核心數學定義</span>
+        <h2>縮放點積注意力（Scaled Dot-Product Attention）</h2>
+      </div>
+      <div class="content-body">
+        <ul>
+          <li>輸入包含維度為 $d_k$ 的查詢（Query）與鍵（Key），以及維度為 $d_v$ 的值（Value）。</li>
+          <li>為避免點積數值過大導致 Softmax 進入<span class="highlight">梯度極小區間</span>，需除以縮放因子 $\sqrt{d_k}$。</li>
+        </ul>
+
+        <div class="formula-card" onclick="copyLatex(this, '\\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V')">
+          <span class="copy-badge">📋 點擊複製 LaTeX</span>
+          $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="wiki-source">📎 Wiki: [[Wiki_Attention公式推導]]</span>
+        <span>2 / 2</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">← 上一頁</button>
+    <span id="page-indicator">1 / 2</span>
+    <button class="nav-btn" onclick="changeSlide(1)">下一頁 →</button>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicator = document.getElementById('page-indicator');
+
+    function showSlide(index) {
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === index);
+      });
+      indicator.textContent = `${index + 1} / ${slides.length}`;
+    }
+
+    function changeSlide(step) {
+      currentSlide = (currentSlide + step + slides.length) % slides.length;
+      showSlide(currentSlide);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+      if (e.key === 'ArrowLeft') changeSlide(-1);
+    });
+
+    function copyLatex(el, latexCode) {
+      navigator.clipboard.writeText(latexCode);
+      const badge = el.querySelector('.copy-badge');
+      const originalText = badge.textContent;
+      badge.textContent = '✅ 已複製！';
+      setTimeout(() => badge.textContent = originalText, 1500);
+    }
+  </script>
+</body>
+</html>

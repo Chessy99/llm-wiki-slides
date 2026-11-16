@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM 輔助演化與強化學習優化 - 京都抹茶和紙簡報</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
+  <style>
+    :root {
+      --bg-washi: #F9F6F0;
+      --card-cream: #FFFFFF;
+      --border-linen: #E6DFD3;
+      --matcha-main: #8FA893;
+      --matcha-dark: #5F7A63;
+      --matcha-soft: #F0F4F1;
+      --terracotta-accent: #D99B84;
+      --terracotta-dark: #B5735B;
+      --terracotta-soft: #FBF2EE;
+      --text-coffee: #4A443F;
+      --text-muted: #7A726B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-washi);
+      background-image: radial-gradient(#DED7C8 0.8px, transparent 0.8px);
+      background-size: 20px 20px;
+      color: var(--text-coffee);
+      font-family: 'Noto Sans TC', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .slide-container {
+      width: 92%;
+      max-width: 1020px;
+      height: 82vh;
+      max-height: 660px;
+      position: relative;
+    }
+
+    .slide {
+      display: none;
+      background: var(--card-cream);
+      border: 1.5px solid var(--border-linen);
+      border-radius: 24px;
+      padding: 42px 54px;
+      height: 100%;
+      box-shadow: 0 12px 32px rgba(74, 68, 63, 0.06);
+      position: relative;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeSlide 0.35s ease-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 和紙膠帶裝飾 */
+    .washi-tape {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-1.5deg);
+      width: 150px;
+      height: 28px;
+      background-color: rgba(143, 168, 147, 0.48);
+      border-left: 2px dashed rgba(255,255,255,0.65);
+      border-right: 2px dashed rgba(255,255,255,0.65);
+      backdrop-filter: blur(2px);
+    }
+
+    .washi-tape.pink {
+      background-color: rgba(217, 155, 132, 0.48);
+      transform: translateX(-50%) rotate(1.3deg);
+    }
+
+    /* 標題區 */
+    .slide-header {
+      border-bottom: 2px dashed var(--border-linen);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+
+    .tag-pill {
+      display: inline-block;
+      background: var(--terracotta-soft);
+      color: var(--terracotta-dark);
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(217, 155, 132, 0.35);
+    }
+
+    .gap-badge {
+      display: inline-block;
+      background: #FFF8E7;
+      color: #9C7A3C;
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px dashed #D8C08A;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--text-coffee);
+      letter-spacing: 0.03em;
+    }
+
+    h1 { font-size: 2.15rem; line-height: 1.38; }
+    h2 { font-size: 1.55rem; display: flex; align-items: center; gap: 10px; }
+    h2::before {
+      content: "🌿";
+      font-size: 1.25rem;
+    }
+
+    /* 內文區 */
+    .content-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 15px;
+      font-size: 1.03rem;
+      line-height: 1.7;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    li {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 9px;
+      height: 9px;
+      background-color: var(--matcha-main);
+      border-radius: 50%;
+    }
+
+    .highlight {
+      background: linear-gradient(transparent 60%, rgba(217, 155, 132, 0.35) 60%);
+      font-weight: 700;
+      padding: 0 4px;
+    }
+
+    /* 雙欄卡片 */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .mini-card {
+      background: var(--bg-washi);
+      border: 1px solid var(--border-linen);
+      border-radius: 16px;
+      padding: 18px 20px;
+    }
+
+    .mini-card h3 {
+      font-size: 1.1rem;
+      color: var(--matcha-dark);
+      margin-bottom: 8px;
+    }
+
+    /* 抹茶便利貼 LaTeX 公式框 */
+    .formula-card {
+      background-color: var(--matcha-soft);
+      border: 1.5px solid rgba(143, 168, 147, 0.45);
+      border-radius: 16px;
+      padding: 16px 24px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .formula-card:hover {
+      border-color: var(--matcha-main);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(143, 168, 147, 0.16);
+    }
+
+    .copy-badge {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 0.72rem;
+      color: var(--matcha-dark);
+      background: rgba(255, 255, 255, 0.85);
+      padding: 2px 10px;
+      border-radius: 99px;
+      border: 1px solid rgba(143, 168, 147, 0.35);
+    }
+
+    /* 參考文獻下載卡片 */
+    .ref-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ref-item {
+      background: var(--bg-washi);
+      border: 1px solid var(--border-linen);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ref-info {
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .ref-title {
+      font-weight: 700;
+      color: var(--text-coffee);
+    }
+
+    .ref-reason {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .dl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--matcha-main);
+      color: #FFFFFF;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .dl-btn:hover {
+      background: var(--matcha-dark);
+    }
+
+    /* 頁尾與 Wiki 引用標籤 */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-linen);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .wiki-source {
+      background: var(--bg-washi);
+      border: 1px solid var(--border-linen);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: #6B635B;
+    }
+
+    /* 導航控制列 */
+    .nav-controls {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--text-muted);
+    }
+
+    button.nav-btn {
+      background: var(--card-cream);
+      border: 1.5px solid var(--border-linen);
+      color: var(--text-coffee);
+      padding: 7px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    button.nav-btn:hover {
+      background: var(--matcha-soft);
+      border-color: var(--matcha-main);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-container">
+    <!-- 第 1 頁：封面 -->
+    <div class="slide active">
+      <div class="washi-tape"></div>
+      <div class="slide-header" style="border:none; text-align:center; margin-top: 32px;">
+        <span class="tag-pill">📒 LLM Wiki 知識庫專題簡報</span>
+        <h1>LLM 輔助演化與強化學習優化<br><span style="font-size: 1.15rem; color: var(--text-muted); font-weight: 500;">Evolutionary Search & Reinforcement Learning Synergy</span></h1>
+      </div>
+      <div class="content-body" style="align-items: center; text-align: center;">
+        <p style="max-width: 640px; color: var(--text-muted);">
+          本簡報採用「京都抹茶與和紙手帳風」模板，整合<span class="highlight">大語言模型演化式搜尋</span>與<span class="highlight">強化學習策略優化</span>之核心數學框架，並附有可一鍵下載的 arXiv 建議文獻清單供後續 Wiki 知識庫擴充。
+        </p>
+        <div style="margin-top: 8px;">
+          <span class="gap-badge">⚠️ 提示：尚未掛載本地 /wiki/ 資料夾，目前內容為標準結構預填版</span>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="wiki-source">📎 來源：[[Wiki_LLM_Evolution_RL]] (待匯入)</span>
+        <span>鍵盤 ← / → 或空白鍵換頁</span>
+      </div>
+    </div>
+
+    <!-- 第 2 頁：研究動機與雙引擎協同架構 -->
+    <div class="slide">
+      <div class="washi-tape pink"></div>
+      <div class="slide-header">
+        <span class="tag-pill">01 / 核心架構與協同機制</span>
+        <h2>為何結合「演化演算法」與「強化學習」？ <span class="gap-badge">[Wiki 尚無此部分資料]</span></h2>
+      </div>
+      <div class="content-body">
+        <div class="grid-2">
+          <div class="mini-card">
+            <h3>🌱 LLM 輔助演化（Outer Loop）</h3>
+            <p style="font-size: 0.94rem; color: var(--text-muted);">
+              將 LLM 視為具備語義先驗的<span class="highlight">變異與交叉算子</span>（Mutation & Crossover），在程式碼空間、提示詞或獎勵函數空間進行多樣性探索，避免陷入局部最佳解。
+            </p>
+          </div>
+          <div class="mini-card">
+            <h3>🎯 強化學習優化（Inner Loop）</h3>
+            <p style="font-size: 0.94rem; color: var(--text-muted);">
+              針對候選解或策略參數進行<span class="highlight">細粒度梯度更新</span>與價值評估，將環境回饋訊號轉化為精準的策略改進與適應度（Fitness）評分。
+            </p>
+          </div>
+        </div>
+        <ul>
+          <li><strong>雙向閉環增益</strong>：演化搜尋負責跨越多模態地形的「全域跳躍」，強化學習負責區域內的「高效收斂」，並將高分軌跡回傳豐富演化族群庫（Island Model）。</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span class="wiki-source">📎 Wiki: [[Wiki_演化與RL協同框架]]</span>
+        <span>2 / 5</span>
+      </div>
+    </div>
+
+    <!-- 第 3 頁：LLM 輔助演化搜尋的數學表達 -->
+    <div class="slide">
+      <div class="washi-tape"></div>
+      <div class="slide-header">
+        <span class="tag-pill">02 / 演化式搜尋機制</span>
+        <h2>LLM 作為語義變異算子（Semantic Mutation） <span class="gap-badge">[Wiki 尚無此部分資料]</span></h2>
+      </div>
+      <div class="content-body">
+        <ul>
+          <li>傳統演化演算法依賴隨機符號擾動，無效解比例極高；LLM 依據歷史高適應度父代樣本 $P_t = \{(x_i, f(x_i))\}_{i=1}^k$ 生成結構合理的新後代 $x_{\text{new}}$。</li>
+          <li>透過<span class="highlight">島嶼模型（Island-based Population）</span>維持族群多樣性，定期遷移最優個體並淘汰低分樣本。</li>
+        </ul>
+        <div class="formula-card" onclick="copyLatex(this, 'x_{\\text{new}} \\sim p_{\\theta_{\\text{LLM}}}\\left(x \\mid \\text{Prompt}\\left(\\{(x_i, f(x_i))\\}_{i \\in \\mathcal{S}_t}\\right)\\right), \\quad \\mathcal{P}_{t+1} = \\text{Select}_K\\left(\\mathcal{P}_t \\cup \\{x_{\\text{new}}\\}, f\\right)')">
+          <span class="copy-badge">📋 點擊複製 LaTeX</span>
+          $$x_{\text{new}} \sim p_{\theta_{\text{LLM}}}\left(x \mid \text{Prompt}\left(\{(x_i, f(x_i))\}_{i \in \mathcal{S}_t}\right)\right), \quad \mathcal{P}_{t+1} = \text{Select}_K\left(\mathcal{P}_t \cup \{x_{\text{new}}\}, f\right)$$
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="wiki-source">📎 Wiki: [[Wiki_FunSearch與程式演化]]</span>
+        <span>3 / 5</span>
+      </div>
+    </div>
+
+    <!-- 第 4 頁：強化學習策略優化（PPO 與 GRPO） -->
+    <div class="slide">
+      <div class="washi-tape pink"></div>
+      <div class="slide-header">
+        <span class="tag-pill">03 / 強化學習策略優化</span>
+        <h2>群組相對策略優化（GRPO）目標函數 <span class="gap-badge">[Wiki 尚無此部分資料]</span></h2>
+      </div>
+      <div class="content-body">
+        <ul>
+          <li>相較於傳統 PPO 需額外訓練與策略模型同等大小的 Critic 網路，<strong>GRPO</strong> 透過對同一問題採樣一組輸出 $\{o_1, o_2, \dots, o_G\}$ 計算群組內相對優勢，大幅降低記憶體開銷。</li>
+          <li>結合<span class="highlight">可驗證獎勵（RLVR）</span>或演化適應度函數 $r_i$，直接驅動模型推理與生成能力進化。</li>
+        </ul>
+        <div class="formula-card" onclick="copyLatex(this, '\\mathcal{J}_{\\text{GRPO}}(\\theta) = \\mathbb{E}_{q, \\{o_i\\}_{i=1}^G} \\left[ \\frac{1}{G}\\sum_{i=1}^G \\min\\left(\\frac{\\pi_\\theta(o_i|q)}{\\pi_{\\theta_{\\text{old}}}(o_i|q)} A_i, \\text{clip}\\left(\\frac{\\pi_\\theta(o_i|q)}{\\pi_{\\theta_{\\text{old}}}(o_i|q)}, 1-\\epsilon, 1+\\epsilon\\right) A_i\\right) - \\beta D_{\\text{KL}}(\\pi_\\theta \\| \\pi_{\\text{ref}}) \\right]')">
+          <span class="copy-badge">📋 點擊複製 LaTeX</span>
+          $$\mathcal{J}_{\text{GRPO}}(\theta) = \mathbb{E}_{q, \{o_i\}_{i=1}^G} \left[ \frac{1}{G}\sum_{i=1}^G \min\left(\rho_i(\theta) A_i, \text{clip}\left(\rho_i(\theta), 1-\epsilon, 1+\epsilon\right) A_i\right) - \beta D_{\text{KL}}(\pi_\theta \| \pi_{\text{ref}}) \right]$$
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted); text-align: center;">
+          其中群組標準化優勢函數為：$A_i = \frac{r_i - \text{mean}(\{r_1, \dots, r_G\})}{\text{std}(\{r_1, \dots, r_G\})}$
+        </p>
+      </div>
+      <div class="slide-footer">
+        <span class="wiki-source">📎 Wiki: [[Wiki_RLHF與GRPO演算法]]</span>
+        <span>4 / 5</span>
+      </div>
+    </div>
+
+    <!-- 第 5 頁：建議參考文獻（可點擊下載 arXiv PDF，待整理入 Wiki） -->
+    <div class="slide">
+      <div class="washi-tape"></div>
+      <div class="slide-header">
+        <span class="tag-pill">04 / 建議參考文獻（待整理入 Wiki）</span>
+        <h2>推薦收錄論文清單（點擊即可直接下載 PDF）</h2>
+      </div>
+      <div class="content-body">
+        <div class="ref-list">
+          <div class="ref-item">
+            <div class="ref-info">
+              <div class="ref-title">1. Eureka: Human-Level Reward Design via Coding LLMs (ICLR 2024)</div>
+              <div class="ref-reason">📌 收錄原因：補足「LLM 演化搜尋自動生成強化學習獎勵函數」的經典雙層優化案例。</div>
+            </div>
+            <a class="dl-btn" href="https://arxiv.org/pdf/2310.12931.pdf" target="_blank" download>⬇ 下載 PDF</a>
+          </div>
+          <div class="ref-item">
+            <div class="ref-info">
+              <div class="ref-title">2. Connecting Large Language Models with Evolutionary Algorithms (EvoPrompt, ICLR 2024)</div>
+              <div class="ref-reason">📌 收錄原因：建立 LLM 模擬遺傳演算法（GA）與差分演化（DE）的標準數學與實驗基準。</div>
+            </div>
+            <a class="dl-btn" href="https://arxiv.org/pdf/2309.08532.pdf" target="_blank" download>⬇ 下載 PDF</a>
+          </div>
+          <div class="ref-item">
+            <div class="ref-info">
+              <div class="ref-title">3. DeepSeekMath: Pushing the Limits of Mathematical Reasoning (GRPO 原始論文)</div>
+              <div class="ref-reason">📌 收錄原因：完整推導 GRPO 無 Critic 策略優化公式，適合納入 Wiki 強化學習核心條目。</div>
+            </div>
+            <a class="dl-btn" href="https://arxiv.org/pdf/2402.03300.pdf" target="_blank" download>⬇ 下載 PDF</a>
+          </div>
+          <div class="ref-item">
+            <div class="ref-info">
+              <div class="ref-title">4. Evolution through Large Models (ELM, 2022)</div>
+              <div class="ref-reason">📌 收錄原因：探討如何結合 Quality-Diversity 演化與強化學習微調程式碼生成模型。</div>
+            </div>
+            <a class="dl-btn" href="https://arxiv.org/pdf/2206.08896.pdf" target="_blank" download>⬇ 下載 PDF</a>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="wiki-source">📎 下一步：下載 PDF 後匯入 /wiki/ 進行知識庫解析</span>
+        <span>5 / 5</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">← 上一頁</button>
+    <span id="page-indicator">1 / 5</span>
+    <button class="nav-btn" onclick="changeSlide(1)">下一頁 →</button>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicator = document.getElementById('page-indicator');
+
+    function showSlide(index) {
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === index);
+      });
+      indicator.textContent = `${index + 1} / ${slides.length}`;
+    }
+
+    function changeSlide(step) {
+      currentSlide = (currentSlide + step + slides.length) % slides.length;
+      showSlide(currentSlide);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+      if (e.key === 'ArrowLeft') changeSlide(-1);
+    });
+
+    function copyLatex(el, latexCode) {
+      navigator.clipboard.writeText(latexCode);
+      const badge = el.querySelector('.copy-badge');
+      const originalText = badge.textContent;
+      badge.textContent = '✅ 已複製！';
+      setTimeout(() => badge.textContent = originalText, 1500);
+    }
+  </script>
+</body>
+</html>
